@@ -3,6 +3,8 @@
 ### Description
 The Vehicle Tracking sample template gives you a head start on your next tracking project. With a working code example to draw from, you can spend more of your time implementing the features you care about and less time thinking about how to accomplish the basic functionality of a tracking system.
 
+Please refer to [Wiki](http://wiki.thinkgeo.com/wiki/map_suite_desktop_for_wpf) for the details.
+
 ![Screenshot](https://github.com/ThinkGeo/VehicleTrackingSample-ForWpf/blob/master/ScreenShot.png)
 
 ### Requirements
@@ -16,9 +18,9 @@ Working...
 
 ### Getting Help
 
-[Map Suite Wpf Wiki Resources](http://wiki.thinkgeo.com/wiki/map_suite_wpf_desktop_edition)
+[Map Suite Wpf Wiki Resources](http://wiki.thinkgeo.com/wiki/map_suite_desktop_for_wpf)
 
-[Map Suite Wpf Product Description](http://thinkgeo.com/map-suite-developer-gis/wpf-edition/)
+[Map Suite Wpf Product Description](https://thinkgeo.com/ui-controls#desktop-platforms)
 
 [ThinkGeo Community Site](http://community.thinkgeo.com/)
 
