@@ -13,9 +13,30 @@ This sample makes use of the following NuGet Packages
 [MapSuite 10.0.0](https://www.nuget.org/packages?q=ThinkGeo)
 
 ### About the Code
+```csharp
+if (!traceOverlay.Layers.Contains("VehicleTrail"))
+{
+    vehicleTrailLayer = new InMemoryFeatureLayer();
+    vehicleTrailLayer.Open();
+    vehicleTrailLayer.ZoomLevelSet.ZoomLevel01.DefaultPointStyle = GetVehicleTrailStyle();
+    vehicleTrailLayer.ZoomLevelSet.ZoomLevel01.ApplyUntilZoomLevel = ApplyUntilZoomLevel.Level20;
 
-Working...
-
+    vehicleTrailLayer.FeatureSource.Open();
+    vehicleTrailLayer.Columns.Add(new FeatureSourceColumn("Speed"));
+    vehicleTrailLayer.Columns.Add(new FeatureSourceColumn("DateTime"));
+    vehicleTrailLayer.Columns.Add(new FeatureSourceColumn("Longitude"));
+    vehicleTrailLayer.Columns.Add(new FeatureSourceColumn("Latitude"));
+    vehicleTrailLayer.Columns.Add(new FeatureSourceColumn("VehicleName"));
+    vehicleTrailLayer.Columns.Add(new FeatureSourceColumn("Duration"));
+    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+    {
+        lock (traceOverlay.Layers)
+        {
+            traceOverlay.Layers.Add("VehicleTrail", vehicleTrailLayer);
+        }
+    }));
+}
+```
 ### Getting Help
 
 [Map Suite Desktop for Wpf Wiki Resources](http://wiki.thinkgeo.com/wiki/map_suite_desktop_for_wpf)
@@ -29,7 +50,9 @@ Working...
 ### Key APIs
 This example makes use of the following APIs:
 
-Working...
+- [ThinkGeo.MapSuite.Layers.InMemoryFeatureLayer](http://wiki.thinkgeo.com/wiki/api/thinkgeo.mapsuite.layers.inmemoryfeaturelayer)
+- [ThinkGeo.MapSuite.Layers.FeatureSourceColumn](http://wiki.thinkgeo.com/wiki/api/thinkgeo.mapsuite.layers.featuresourcecolumn)
+- [ThinkGeo.MapSuite.Layers.ApplyUntilZoomLevel](http://wiki.thinkgeo.com/wiki/api/thinkgeo.mapsuite.layers.applyuntilzoomlevel)
 
 ### About Map Suite
 Map Suite is a set of powerful development components and services for the .Net Framework.
