@@ -156,16 +156,16 @@
   <data name="SpatialFenceOverlayName" xml:space="preserve">
     <value>SpatialFenceOverlay</value>
   </data>
+  <data name="ThinkGeoCloudMapAerialOverlay" xml:space="preserve">
+    <value>ThinkGeoCloudMap Aerial</value>
+  </data>
+  <data name="ThinkGeoCloudMapHybridOverlay" xml:space="preserve">
+    <value>ThinkGeoCloudMap Hybrid</value>
+  </data>
+  <data name="ThinkGeoCloudMapLightOverlay" xml:space="preserve">
+    <value>ThinkGeoCloudMap Light</value>
+  </data>
   <data name="TraceOverlayName" xml:space="preserve">
     <value>TraceOverlay</value>
-  </data>
-  <data name="WorldMapKitOverlayAerialName" xml:space="preserve">
-    <value>World Map Kit Aerial</value>
-  </data>
-  <data name="WorldMapKitOverlayAerialWithLabelsName" xml:space="preserve">
-    <value>World Map Kit Aerial With Labels</value>
-  </data>
-  <data name="WorldMapKitOverlayRoadName" xml:space="preserve">
-    <value>World Map Kit Road</value>
   </data>
 </root>
