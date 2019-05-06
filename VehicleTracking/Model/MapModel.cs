@@ -70,7 +70,7 @@ namespace ThinkGeo.MapSuite.VehicleTracking
             TrackMode = TrackMode.None;
             mapControl.MapClick += WpfMap1_MapClick;
             mapControl.MapUnit = GeographyUnit.Meter;
-            mapControl.ZoomLevelSet = ThinkGeoCloudMapsOverlay.GetZoomLevelSet();
+            mapControl.ZoomLevelSet = new ThinkGeoCloudMapsZoomLevelSet();
             mapControl.CurrentExtent = defaultExtent;
 
             InitializeMapTools();
@@ -145,29 +145,29 @@ namespace ThinkGeo.MapSuite.VehicleTracking
         {
             string cacheFolder = Path.Combine(Path.GetTempPath(), "TileCache");
 
-            ThinkGeoCloudMapsOverlay thinkGeoCloudMapLightOverlay = new ThinkGeoCloudMapsOverlay();
+            ThinkGeoCloudRasterMapsOverlay thinkGeoCloudMapLightOverlay = new ThinkGeoCloudRasterMapsOverlay();
             thinkGeoCloudMapLightOverlay.Name = Resources.ThinkGeoCloudMapHybridOverlay;
             thinkGeoCloudMapLightOverlay.TileHeight = 512;
             thinkGeoCloudMapLightOverlay.TileWidth = 512;
-            thinkGeoCloudMapLightOverlay.MapType = ThinkGeoCloudMapsMapType.Light;
+            thinkGeoCloudMapLightOverlay.MapType = ThinkGeoCloudRasterMapsMapType.Light;
             thinkGeoCloudMapLightOverlay.IsVisible = true;
             thinkGeoCloudMapLightOverlay.TileCache = new FileBitmapTileCache(cacheFolder, Resources.ThinkGeoCloudMapHybridOverlay);
             mapControl.Overlays.Add(thinkGeoCloudMapLightOverlay);
 
-            ThinkGeoCloudMapsOverlay thinkGeoCloudMapAerialOverlay = new ThinkGeoCloudMapsOverlay();
+            ThinkGeoCloudRasterMapsOverlay thinkGeoCloudMapAerialOverlay = new ThinkGeoCloudRasterMapsOverlay();
             thinkGeoCloudMapAerialOverlay.Name = Resources.ThinkGeoCloudMapLightOverlay;
             thinkGeoCloudMapAerialOverlay.TileHeight = 512;
             thinkGeoCloudMapAerialOverlay.TileWidth = 512;
-            thinkGeoCloudMapAerialOverlay.MapType = ThinkGeoCloudMapsMapType.Aerial;
+            thinkGeoCloudMapAerialOverlay.MapType = ThinkGeoCloudRasterMapsMapType.Aerial;
             thinkGeoCloudMapAerialOverlay.IsVisible = false;
             thinkGeoCloudMapAerialOverlay.TileCache = new FileBitmapTileCache(cacheFolder, Resources.ThinkGeoCloudMapLightOverlay);
             mapControl.Overlays.Add(thinkGeoCloudMapAerialOverlay);
 
-            ThinkGeoCloudMapsOverlay thinkGeoCloudMapHybridOverlay = new ThinkGeoCloudMapsOverlay();
+            ThinkGeoCloudRasterMapsOverlay thinkGeoCloudMapHybridOverlay = new ThinkGeoCloudRasterMapsOverlay();
             thinkGeoCloudMapHybridOverlay.Name = Resources.ThinkGeoCloudMapAerialOverlay;
             thinkGeoCloudMapHybridOverlay.TileHeight = 512;
             thinkGeoCloudMapHybridOverlay.TileWidth = 512;
-            thinkGeoCloudMapHybridOverlay.MapType = ThinkGeoCloudMapsMapType.Hybrid;
+            thinkGeoCloudMapHybridOverlay.MapType = ThinkGeoCloudRasterMapsMapType.Hybrid;
             thinkGeoCloudMapHybridOverlay.IsVisible = false;
             thinkGeoCloudMapHybridOverlay.TileCache = new FileBitmapTileCache(cacheFolder, Resources.ThinkGeoCloudMapAerialOverlay);
             mapControl.Overlays.Add(thinkGeoCloudMapHybridOverlay);
