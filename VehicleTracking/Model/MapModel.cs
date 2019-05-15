@@ -150,18 +150,18 @@ namespace ThinkGeo.MapSuite.VehicleTracking
             thinkGeoCloudMapLightOverlay.TileHeight = 512;
             thinkGeoCloudMapLightOverlay.TileWidth = 512;
             thinkGeoCloudMapLightOverlay.MapType = ThinkGeoCloudRasterMapsMapType.Light;
-            thinkGeoCloudMapLightOverlay.IsVisible = true;
+            thinkGeoCloudMapLightOverlay.IsVisible = false;
             thinkGeoCloudMapLightOverlay.TileCache = new FileBitmapTileCache(cacheFolder, Resources.ThinkGeoCloudMapHybridOverlay);
             mapControl.Overlays.Add(thinkGeoCloudMapLightOverlay);
 
-            ThinkGeoCloudRasterMapsOverlay thinkGeoCloudMapAerialOverlay = new ThinkGeoCloudRasterMapsOverlay();
-            thinkGeoCloudMapAerialOverlay.Name = Resources.ThinkGeoCloudMapLightOverlay;
-            thinkGeoCloudMapAerialOverlay.TileHeight = 512;
-            thinkGeoCloudMapAerialOverlay.TileWidth = 512;
-            thinkGeoCloudMapAerialOverlay.MapType = ThinkGeoCloudRasterMapsMapType.Aerial;
-            thinkGeoCloudMapAerialOverlay.IsVisible = false;
-            thinkGeoCloudMapAerialOverlay.TileCache = new FileBitmapTileCache(cacheFolder, Resources.ThinkGeoCloudMapLightOverlay);
-            mapControl.Overlays.Add(thinkGeoCloudMapAerialOverlay);
+            ThinkGeoCloudRasterMapsOverlay thinkGeoCloudMapDarkOverlay = new ThinkGeoCloudRasterMapsOverlay();
+            thinkGeoCloudMapDarkOverlay.Name = Resources.ThinkGeoCloudMapLightOverlay;
+            thinkGeoCloudMapDarkOverlay.TileHeight = 512;
+            thinkGeoCloudMapDarkOverlay.TileWidth = 512;
+            thinkGeoCloudMapDarkOverlay.MapType = ThinkGeoCloudRasterMapsMapType.Dark;
+            thinkGeoCloudMapDarkOverlay.IsVisible = true;
+            thinkGeoCloudMapDarkOverlay.TileCache = new FileBitmapTileCache(cacheFolder, Resources.ThinkGeoCloudMapLightOverlay);
+            mapControl.Overlays.Add(thinkGeoCloudMapDarkOverlay);
 
             ThinkGeoCloudRasterMapsOverlay thinkGeoCloudMapHybridOverlay = new ThinkGeoCloudRasterMapsOverlay();
             thinkGeoCloudMapHybridOverlay.Name = Resources.ThinkGeoCloudMapAerialOverlay;

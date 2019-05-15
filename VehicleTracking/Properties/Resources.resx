@@ -157,13 +157,13 @@
     <value>SpatialFenceOverlay</value>
   </data>
   <data name="ThinkGeoCloudMapAerialOverlay" xml:space="preserve">
-    <value>ThinkGeoCloudMap Aerial</value>
-  </data>
-  <data name="ThinkGeoCloudMapHybridOverlay" xml:space="preserve">
     <value>ThinkGeoCloudMap Hybrid</value>
   </data>
-  <data name="ThinkGeoCloudMapLightOverlay" xml:space="preserve">
+  <data name="ThinkGeoCloudMapHybridOverlay" xml:space="preserve">
     <value>ThinkGeoCloudMap Light</value>
+  </data>
+  <data name="ThinkGeoCloudMapLightOverlay" xml:space="preserve">
+    <value>ThinkGeoCloudMap Dark</value>
   </data>
   <data name="TraceOverlayName" xml:space="preserve">
     <value>TraceOverlay</value>

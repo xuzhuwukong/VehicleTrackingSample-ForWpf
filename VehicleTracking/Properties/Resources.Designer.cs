@@ -178,7 +178,7 @@ namespace ThinkGeo.MapSuite.VehicleTracking.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ThinkGeoCloudMap Aerial.
+        ///   Looks up a localized string similar to ThinkGeoCloudMap Hybrid.
         /// </summary>
         internal static string ThinkGeoCloudMapAerialOverlay {
             get {
@@ -187,7 +187,7 @@ namespace ThinkGeo.MapSuite.VehicleTracking.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ThinkGeoCloudMap Hybrid.
+        ///   Looks up a localized string similar to ThinkGeoCloudMap Light.
         /// </summary>
         internal static string ThinkGeoCloudMapHybridOverlay {
             get {
@@ -196,7 +196,7 @@ namespace ThinkGeo.MapSuite.VehicleTracking.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ThinkGeoCloudMap Light.
+        ///   Looks up a localized string similar to ThinkGeoCloudMap Dark.
         /// </summary>
         internal static string ThinkGeoCloudMapLightOverlay {
             get {
