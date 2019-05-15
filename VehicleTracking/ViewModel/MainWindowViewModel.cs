@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
-using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -23,7 +22,7 @@ namespace ThinkGeo.MapSuite.VehicleTracking
     {
         private static readonly DateTime adjustedStartTime = DateTime.Parse("2009/7/10 11:31:0");
         private static readonly DateTime applicationStartTime = DateTime.Now;
-        private static readonly string databasePathFileName;
+        private static readonly string dataRootPath;
 
         private bool isBusy;
         private bool autoRefresh;
@@ -51,7 +50,7 @@ namespace ThinkGeo.MapSuite.VehicleTracking
 
         static MainWindowViewModel()
         {
-            databasePathFileName = ConfigurationManager.AppSettings["databasePathFileName"];
+            dataRootPath = ConfigurationManager.AppSettings["dataRootPath"];
         }
 
         public MainWindowViewModel()
@@ -543,10 +542,9 @@ namespace ThinkGeo.MapSuite.VehicleTracking
         private void UpdateVehicles(LayerOverlay traceOverlay, DateTime currentTime)
         {
             Dictionary<int, Vehicle> currentVehicles;
-            using (TrackingAccessProvider vehicleProvider = new TrackingAccessProvider(databasePathFileName))
-            {
-                currentVehicles = vehicleProvider.GetCurrentVehicles(currentTime);
-            }
+            TrackingAccessProvider vehicleProvider = new TrackingAccessProvider(dataRootPath);
+            currentVehicles = vehicleProvider.GetCurrentVehicles(currentTime);
+
 
             // Loop through all the vehicle to add the history points
             if (currentVehicles != null && currentVehicles.All(v => !string.IsNullOrEmpty(v.Value.IconPath)))
@@ -667,10 +665,8 @@ namespace ThinkGeo.MapSuite.VehicleTracking
 
             // Get the spatial fences from the database
             Collection<Feature> spatialFences;
-            using (TrackingAccessProvider vehicleProvider = new TrackingAccessProvider(databasePathFileName))
-            {
-                spatialFences = vehicleProvider.GetSpatialFences();
-            }
+            TrackingAccessProvider vehicleProvider = new TrackingAccessProvider(dataRootPath);
+            spatialFences = vehicleProvider.GetSpatialFences();
 
             // Insert fences from database into fence layer
             if (spatialFences != null)
@@ -733,7 +729,7 @@ namespace ThinkGeo.MapSuite.VehicleTracking
                 }
                 mapModel.SpatialFenceOverlay.Refresh();
 
-                vehicleProvider = new TrackingAccessProvider(databasePathFileName);
+                vehicleProvider = new TrackingAccessProvider(dataRootPath);
 
                 // Delete Spatial fences which is not in current spatial fence layer
                 vehicleProvider.DeleteSpatialFencesExcluding(mapModel.SpatialFenceLayer.InternalFeatures);
@@ -743,16 +739,8 @@ namespace ThinkGeo.MapSuite.VehicleTracking
                 {
                     // Update Spatial fence by feature Id
                     // if the affected data row number is 0, we will add a new row in the database
-                    int updatedCount = vehicleProvider.UpdateSpatialFenceByFeature(feature);
-                    if (updatedCount == 0)
-                    {
-                        vehicleProvider.InsertSpatialFence(feature);
-                    }
+                    vehicleProvider.UpdateSpatialFenceByFeature(feature);
                 }
-            }
-            catch (OleDbException)
-            {
-                MessageBox.Show(string.Format(CultureInfo.InvariantCulture, "Please make sure {0} is writable", databasePathFileName), "Save Spatial Fences");
             }
             catch (Exception e)
             {
@@ -765,7 +753,6 @@ namespace ThinkGeo.MapSuite.VehicleTracking
                 mapModel.MapControl.EditOverlay.EditShapesLayer.InternalFeatures.Clear();
                 mapModel.PopupOverlay.Popups.Clear();
                 mapModel.MapControl.Refresh();
-                if (vehicleProvider != null) { vehicleProvider.Dispose(); }
                 if (drawFenceMode == DrawFenceMode.EditFence || drawFenceMode == DrawFenceMode.DrawNewFence)
                 {
                     DrawFenceMode = DrawFenceMode.DrawNewFence;

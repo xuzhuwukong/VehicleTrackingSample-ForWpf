@@ -2,32 +2,34 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.Data.OleDb;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using ThinkGeo.MapSuite.Shapes;
+using System.Linq;
+using Microsoft.VisualBasic.FileIO;
 
 namespace ThinkGeo.MapSuite.VehicleTracking
 {
-    public class TrackingAccessProvider : TrackingDataProvider
+    public class TrackingAccessProvider
     {
-        private OleDbConnection dataConnection;
+        private string dataRootPath;
 
-        public TrackingAccessProvider(string databaseFilePath)
+        public TrackingAccessProvider(string dataRootPath)
         {
-            string connectionString = string.Format(CultureInfo.InvariantCulture, "Provider=Microsoft.Jet.OLEDB.4.0; Data Source='{0}'", databaseFilePath);
-            dataConnection = new OleDbConnection(connectionString);
+            this.dataRootPath = dataRootPath;
         }
 
-        public override Dictionary<int, Vehicle> GetCurrentVehicles(DateTime currentTime)
+        public Dictionary<int, Vehicle> GetCurrentVehicles(DateTime currentTime)
         {
             Dictionary<int, Vehicle> vehiclesList = new Dictionary<int, Vehicle>();
-            DataSet vehiclesDataSet = ExecuteQuery("Select * from Vehicle");
 
+            var path = Path.Combine(dataRootPath, "Vehicle.txt");
+            var records = ParseCsv(path);
             TimeSpan trackHistoryVehicleTimeSpan = TimeSpan.FromHours(8);
-            foreach (DataRow row in vehiclesDataSet.Tables[0].Rows)
+            foreach (var record in records)
             {
-                int vehicleId = Convert.ToInt32(row["VehicleId"], CultureInfo.InvariantCulture);
+                int vehicleId = Convert.ToInt32(record[1], CultureInfo.InvariantCulture);
                 Vehicle vehicle = GetCurrentVehicle(vehicleId, currentTime, trackHistoryVehicleTimeSpan);
                 vehiclesList.Add(vehicle.Id, vehicle);
             }
@@ -37,148 +39,164 @@ namespace ThinkGeo.MapSuite.VehicleTracking
 
         private Vehicle GetCurrentVehicle(int vehicleId, DateTime currentTime, TimeSpan trackHistoryVehicleTimeSpan)
         {
-            string sql = "SELECT A.VehicleName, A.VehicleID, A.VehicleIconVirtualPath, B.Longitude, B.Latitude, B.[Date], B.Speed FROM (Vehicle A LEFT OUTER JOIN Location B ON A.VehicleID = B.VehicleID) WHERE (A.VehicleID = {0}) AND (B.[Date] <= #{1}# and B.[Date]>=#{2}#) ORDER BY A.VehicleID, B.[Date] DESC";
             DateTime trackStartTime = currentTime.AddTicks(-trackHistoryVehicleTimeSpan.Ticks);
-            sql = String.Format(CultureInfo.InvariantCulture, sql, vehicleId, currentTime.ToString(CultureInfo.InvariantCulture), trackStartTime.ToString(CultureInfo.InvariantCulture));
-            
             Vehicle currentVechicle = new Vehicle(vehicleId);
-            DataSet currentLocations = null;
-            try
+
+            var vehicleFilePath = Path.Combine(dataRootPath, "Vehicle.txt");
+            var vehicleRecords = ParseCsv(vehicleFilePath);
+            foreach (var vehicleRecord in vehicleRecords)
             {
-                // Get the locations from current time back to the passed time span
-                currentLocations = ExecuteQuery(sql);
-                Collection<double> historySpeeds = new Collection<double>();
-                for (int rowIndex = 0; rowIndex < currentLocations.Tables[0].Rows.Count; rowIndex++)
+                int id = Convert.ToInt32(vehicleRecord[1], CultureInfo.InvariantCulture);
+                if (id == vehicleId)
                 {
-                    DataRow dataRow = currentLocations.Tables[0].Rows[rowIndex];
-                    currentVechicle.IconPath = dataRow["VehicleIconVirtualPath"].ToString();
-
-                    double latitude = Convert.ToDouble(dataRow["Latitude"], CultureInfo.InvariantCulture);
-                    double longitude = Convert.ToDouble(dataRow["Longitude"], CultureInfo.InvariantCulture);
-                    double speed = Convert.ToDouble(dataRow["Speed"], CultureInfo.InvariantCulture);
-                    DateTime dateTime = Convert.ToDateTime(dataRow["Date"], CultureInfo.InvariantCulture);
-                    Location currentLocation = new Location(longitude, latitude, speed, dateTime);
-                    historySpeeds.Add(speed);
-
-                    if (rowIndex == 0)
-                    {
-                        string vehicleName = dataRow["VehicleName"].ToString();
-                        currentVechicle.Location = currentLocation;
-                        currentVechicle.Id = vehicleId;
-                        currentVechicle.Name = vehicleName;
-                    }
-                    else
-                    {
-                        currentVechicle.HistoryLocations.Add(currentLocation);
-                    }
+                    currentVechicle.Id = vehicleId;
+                    currentVechicle.Name = vehicleRecord[0];
+                    currentVechicle.IconPath = vehicleRecord[2];
+                    break;
                 }
             }
-            finally
+
+            // Get the locations from current time back to the passed time span
+            Collection<double> historySpeeds = new Collection<double>();
+            var locationFilePath = Path.Combine(dataRootPath, "Location.txt");
+            var records = ParseCsv(locationFilePath).Where(r =>
             {
-                if (currentLocations != null)
+                DateTime dateTime = Convert.ToDateTime(r[4], CultureInfo.InvariantCulture);
+                return (r[1] == vehicleId.ToString()) && dateTime <= currentTime && dateTime >= trackStartTime;
+            }).OrderByDescending(r => r[4]).ToList();
+            for (int rowIndex = 0; rowIndex < records.Count; rowIndex++)
+            {
+                var columns = records[rowIndex];
+                double latitude = Convert.ToDouble(columns[3], CultureInfo.InvariantCulture);
+                double longitude = Convert.ToDouble(columns[2], CultureInfo.InvariantCulture);
+                double speed = Convert.ToDouble(columns[5], CultureInfo.InvariantCulture);
+                DateTime dateTime = Convert.ToDateTime(columns[4], CultureInfo.InvariantCulture);
+                Location currentLocation = new Location(longitude, latitude, speed, dateTime);
+                historySpeeds.Add(speed);
+
+                if (rowIndex == 0)
                 {
-                    currentLocations.Dispose();
+                    currentVechicle.Location = currentLocation;
+                }
+                else
+                {
+                    currentVechicle.HistoryLocations.Add(currentLocation);
                 }
             }
 
             return currentVechicle;
         }
 
-        public override Collection<Feature> GetSpatialFences()
+        public Collection<Feature> GetSpatialFences()
         {
             Collection<Feature> spatialFences = new Collection<Feature>();
-            DataSet dataSet = ExecuteQuery("Select * from SpatialFence");
-
-            foreach (DataRow row in dataSet.Tables[0].Rows)
+            var path = Path.Combine(dataRootPath, "SpatialFence.txt");
+            var records = ParseCsv(path);
+            foreach (var record in records)
             {
-                string wkt = row["FenceGeometry"].ToString();
-                string id = row["FeatureID"].ToString();
+                string wkt = record[1];
+                string id = record[0];
                 spatialFences.Add(new Feature(wkt, id));
             }
             return spatialFences;
         }
 
-        public override void DeleteSpatialFencesExcluding(IEnumerable<Feature> excludeFeatures)
+        public void DeleteSpatialFencesExcluding(IEnumerable<Feature> features)
         {
-            StringBuilder undeleteFeatureIds = new StringBuilder();
-            foreach (Feature undeleteFeature in excludeFeatures)
+            List<string> resultRecords = new List<string>();
+            var path = Path.Combine(dataRootPath, "SpatialFence.txt");
+            var records = ParseCsv(path);
+            foreach (var record in records)
             {
-                undeleteFeatureIds.AppendFormat(CultureInfo.InvariantCulture, "'{0}',", undeleteFeature.Id);
-            }
-            string sql = String.Format(CultureInfo.InvariantCulture, "DELETE FROM SpatialFence WHERE (FeatureID NOT IN ({0}))", undeleteFeatureIds.ToString().TrimEnd(','));
-            ExecuteNonQuery(sql);
-        }
-
-        public override int UpdateSpatialFenceByFeature(Feature feature)
-        {
-            int updatedSpatialFenceCount = ExecuteNonQuery(String.Format(CultureInfo.InvariantCulture, "UPDATE SpatialFence SET FenceGeometry = '{0}' WHERE (FeatureID = '{1}')", feature.GetWellKnownText(), feature.Id));
-            return updatedSpatialFenceCount;
-        }
-
-        public override void InsertSpatialFence(Feature feature)
-        {
-            ExecuteNonQuery(String.Format(CultureInfo.InvariantCulture, "Insert into SpatialFence(FenceGeometry,FeatureID) values('{0}','{1}')", feature.GetWellKnownText(), feature.Id));
-        }
-
-        private DataSet ExecuteQuery(string selectCommandText)
-        {
-            OleDbDataAdapter dataAdapter = null;
-            try
-            {
-                dataAdapter = new OleDbDataAdapter(selectCommandText, dataConnection);
-                dataConnection.Open();
-                DataSet dataSet = new DataSet();
-                dataSet.Locale = CultureInfo.InvariantCulture;
-                dataAdapter.Fill(dataSet);
-                return dataSet;
-            }
-            finally
-            {
-                if (dataAdapter != null){dataAdapter.Dispose();}
-                if (dataConnection != null) { dataConnection.Close(); }
-            }
-        }
-
-        private int ExecuteNonQuery(string cmdText)
-        {
-            OleDbCommand dataCommand = null;
-            int affectedRowNumber;
-            try
-            {
-                dataCommand = new OleDbCommand(cmdText, dataConnection);
-                dataConnection.Open();
-                affectedRowNumber = dataCommand.ExecuteNonQuery();
-            }
-            finally
-            {
-                if (dataCommand != null) { dataCommand.Dispose(); }
-                if (dataConnection != null) { dataConnection.Close(); }
-            }
-
-            return affectedRowNumber;
-        }
-
-        ~TrackingAccessProvider()
-        {
-            Dispose(false);
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool flag)
-        {
-            if (flag)
-            {
-                if (dataConnection != null)
+                bool needDelete = false;
+                foreach (Feature feature in features)
                 {
-                    dataConnection.Close();
-                    dataConnection.Dispose();
-                    dataConnection = null;
+                    if (feature.Id == record[0])
+                    {
+                        record[1] = $"\"{record[1]}\"";
+                        resultRecords.Add(string.Join(",", record));
+                        break;
+                    }
                 }
+            }
+
+            File.WriteAllLines(path, resultRecords);
+        }
+
+        public void UpdateSpatialFenceByFeature(Feature feature)
+        {
+            var path = Path.Combine(dataRootPath, "SpatialFence.txt");
+            var records = ParseCsv(path);
+            bool isAdded = false;
+            int number = 1;
+            List<string> result = new List<string>();
+            foreach (var record in records)
+            {
+                if (record[0] == feature.Id)
+                {
+                    record[1] = $"\"{feature.GetWellKnownText()}\"";
+                    result.Add(string.Join(",", record));
+                    isAdded = true;
+                }
+                else
+                {
+                    record[1] = $"\"{record[1]}\"";
+                    result.Add(string.Join(",", record));
+
+                }
+            }
+            if (!isAdded)
+            {
+                List<string> record = new List<string>();
+                record.Add(feature.Id);
+                record.Add($"\"{feature.GetWellKnownText()}\"");
+                result.Add(string.Join(",", record));
+            }
+
+            File.WriteAllLines(path, result);
+        }
+
+        public void InsertSpatialFence(Feature feature)
+        {
+            var path = Path.Combine(dataRootPath, "SpatialFence.txt");
+            var records = ParseCsv(path);
+            Dictionary<int, string> result = new Dictionary<int, string>();
+            foreach (var record in records)
+            {
+                result.Add(int.Parse(record[0]), string.Join(",", record));
+            }
+
+            result = result.OrderBy(o => o.Key).ToDictionary(o => o.Key, p => p.Value);
+            var latestId = result.ElementAt(result.Count - 1).Key;
+            latestId += 1;
+            result.Add(latestId, $"{latestId},\"{feature.GetWellKnownText()}\",{feature.Id}");
+
+            File.WriteAllLines(path, result.Values);
+        }
+
+
+        private List<List<string>> ParseCsv(string filePath)
+        {
+            List<List<string>> result = new List<List<string>>();
+
+            using (TextFieldParser parser = new TextFieldParser(filePath))
+            {
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
+                while (!parser.EndOfData)
+                {
+                    //Processing row
+                    string[] fields = parser.ReadFields();
+                    List<string> oneLine = new List<string>();
+                    foreach (string field in fields)
+                    {
+                        oneLine.Add(field);
+                        //TODO: Process field
+                    }
+                    result.Add(oneLine);
+                }
+                return result;
+
             }
         }
     }
